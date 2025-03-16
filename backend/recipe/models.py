@@ -131,6 +131,7 @@ class User_Favorite(Recipe_collection_mixin):
         abstract = False
         verbose_name = "Избранное"
         verbose_name_plural = "Избранное"
+        default_related_name = "favorites"
 
 
 class User_Cart(Recipe_collection_mixin):
@@ -139,3 +140,4 @@ class User_Cart(Recipe_collection_mixin):
         abstract = False
         verbose_name = "Список покупок"
         verbose_name_plural = "Списки покупок"
+        default_related_name = "in_cart"
