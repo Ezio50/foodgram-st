@@ -158,4 +158,21 @@ REST_FRAMEWORK = {
     "DEFAULT_AUTHENTICATION_CLASSES": [
         "rest_framework.authentication.TokenAuthentication",
     ],
+    "PAGE_SIZE": 6
+}
+
+DJOSER = {
+    "LOGIN_FIELD": "email",
+    "HIDE_USERS": False,
+    "PASSWORD_CHANGED_EMAIL_CONFIRMATION": False,
+    "TOKEN_MODEL": "rest_framework.authtoken.models.Token",
+    "SERIALIZERS": {
+        "user": "api.serializers.Author_Serializer",
+        "user_create": "api.serializers.Create_User",
+        "current_user": "api.serializers.Author_Serializer",
+    },
+    "PERMISSIONS": {
+        "user": ["djoser.permissions.CurrentUserOrAdminOrReadOnly"],
+        "user_list": ["rest_framework.permissions.AllowAny"],
+    },
 }

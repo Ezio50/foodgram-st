@@ -1,7 +1,14 @@
 from django.contrib.auth import get_user_model
 from drf_extra_fields.fields import Base64ImageField
 from rest_framework import serializers
-from recipe.models import (Ingredient, Recipe, Ingredient_In_Recipe)
+from auth.models import Subscribe
+from recipe.models import (
+    Ingredient,
+    Recipe,
+    Ingredient_In_Recipe,
+    User_Favorite,
+    User_Cart,
+)
 
 
 class Ingredient_Serializer(serializers.ModelSerializer):
@@ -28,7 +35,20 @@ class Author_Serializer():
         fields = ("id", "email", "username", "first_name", "last_name")
 
 
-class Recipe_Serializer(serializers.ModelSerializer):
+class Short_Recipe_Serializer(serializers.ModelSerializer):
+    image = Base64ImageField()
+
+    class Meta:
+        model = Recipe
+        fields = (
+            "id",
+            "name",
+            "image",
+            "cooking_time",
+        )
+
+
+class Recipe_Serializer(Short_Recipe_Serializer):
     author = Author_Serializer()
     ingredients = Ingredient_Serializer(many=True)
     is_favorited = serializers.SerializerMethodField()
@@ -122,6 +142,14 @@ class Subscriber_Serializer(Author_Serializer):
         )
     
 
+class Subscription_Serializer(serializers.ModelSerializer):
+    class Meta:
+        model = Subscribe
+        fields = (
+            "subscribing_user", "target"
+        )
+    
+
 class Create_User(serializers.ModelSerializer):
     avatar = Base64ImageField()
 
@@ -143,3 +171,40 @@ class Avatar_Serializer(serializers.ModelSerializer):
     class Meta:
         model = get_user_model()
         fields = ("avatar",)
+
+
+class Recipe_Collection_Serializer(serializers.Serializer):
+
+    class Meta:
+        abstract = True
+        fields = ("user", "recipe")
+
+    def to_representation(self, instance):
+        serializer = Short_Recipe_Serializer(
+            instance.recipe,
+            context=self.context
+        )
+        return serializer.data
+
+    def validate(self, data, related_name):
+        user = data.get("user")
+        recipe = data.get("recipe")
+
+        if getattr(user, related_name).filter(recipe__id=recipe.id).exists():
+            raise serializers.ValidationError(
+                "Комбинация существует"
+            )
+
+        return data
+
+
+class Favorite_Serializer(Recipe_Collection_Serializer):
+    class Meta:
+        model = User_Favorite
+        fields = ("user", "recipe")
+
+
+class Cart_Serializer(Recipe_Collection_Serializer):
+    class Meta:
+        model = User_Cart
+        fields = ("user", "recipe")
