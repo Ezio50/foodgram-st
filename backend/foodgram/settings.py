@@ -31,10 +31,12 @@ SECRET_KEY = 'django-insecure-@q*c2bpx_qnq4f$fhi40x0(^mqo@$ao#fq4cgi5q6^7_nxuu4^
 DEBUG = True
 
 ALLOWED_HOSTS = [
-    "127.0.0.1"
+    "127.0.0.1",
+    "localhost"
 ]
 CSRF_TRUSTED_ORIGINS = [
-    "http://127.0.0.1"
+    "http://127.0.0.1",
+    "http://localhost"
 ]
 
 
@@ -47,9 +49,13 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    "auth.apps.AuthConfig",
+    'rest_framework',
+    "rest_framework.authtoken",
+    'djoser',
+    'django_filters',
+    "auth_user.apps.Auth_UserConfig",
     "recipe.apps.RecipeConfig",
-    "api.apps.ApiConfig",
+    "api.apps.ApiConfig"
 ]
 
 MIDDLEWARE = [
@@ -87,24 +93,17 @@ WSGI_APPLICATION = 'foodgram.wsgi.application'
 # https://docs.djangoproject.com/en/5.1/ref/settings/#databases
 
 DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
-    }
-}
-
-DATABASES = {
     "default": {
-        "ENGINE": 'django.db.backends.postgres',
-        "NAME": os.getenv("DB_NAME"),
-        "USER": os.getenv("POSTGRES_USER"),
-        "PASSWORD": os.getenv("POSTGRES_PASSWORD"),
-        "HOST": os.getenv("DB_HOST"),
-        "PORT": os.getenv("DB_PORT"),
+        "ENGINE": 'django.db.backends.postgresql',
+        "NAME": os.getenv("NAME"),
+        "USER": os.getenv("USER"),
+        "PASSWORD": os.getenv("PASSWORD"),
+        "HOST": os.getenv("HOST"),
+        "PORT": os.getenv("PORT"),
     }
 }
 
-AUTH_USER_MODEL = "users.User"
+AUTH_USER_MODEL = "auth_user.User"
 
 # Password validation
 # https://docs.djangoproject.com/en/5.1/ref/settings/#auth-password-validators
@@ -144,7 +143,7 @@ STATIC_URL = 'static/'
 STATIC_ROOT = BASE_DIR / 'static'
 
 MEDIA_URL = 'media/'
-MEDIA_ROOT = BASE_DIR / 'static'
+MEDIA_ROOT = BASE_DIR / 'media'
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.1/ref/settings/#default-auto-field
@@ -152,20 +151,21 @@ MEDIA_ROOT = BASE_DIR / 'static'
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 REST_FRAMEWORK = {
-    "DEFAULT_PERMISSION_CLASSES": [
-        "rest_framework.permissions.IsAuthenticated",
+    'DEFAULT_PERMISSION_CLASSES': [
+        'rest_framework.permissions.IsAuthenticated',
     ],
-    "DEFAULT_AUTHENTICATION_CLASSES": [
-        "rest_framework.authentication.TokenAuthentication",
+    'DEFAULT_AUTHENTICATION_CLASSES': [
+        'rest_framework.authentication.TokenAuthentication',
     ],
-    "PAGE_SIZE": 6
+    'DEFAULT_FILTER_BACKENDS': [
+        'django_filters.rest_framework.DjangoFilterBackend'
+    ],
+    'SEARCH_PARAM': 'name',
+    'DEFAULT_PAGINATION_CLASS': 'api.pagination.Standard_Pagination',
 }
 
 DJOSER = {
     "LOGIN_FIELD": "email",
-    "HIDE_USERS": False,
-    "PASSWORD_CHANGED_EMAIL_CONFIRMATION": False,
-    "TOKEN_MODEL": "rest_framework.authtoken.models.Token",
     "SERIALIZERS": {
         "user": "api.serializers.Author_Serializer",
         "user_create": "api.serializers.Create_User",

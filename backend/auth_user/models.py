@@ -14,7 +14,7 @@ class User(AbstractUser):
         verbose_name="Имя пользователя",
         max_length=150,
         validators=[
-            RegexValidator(regex=r"^[\w.@+-]+\z")
+            RegexValidator(regex=r"^[\w.@+-]+\Z")
         ],
         unique=True,
     )
@@ -50,19 +50,19 @@ class Subscribe(models.Model):
     target = models.ForeignKey(
         User,
         on_delete=models.CASCADE,
-        related_name="subscriptions",
+        related_name="subscribers",
         verbose_name="Объект подписки",
     )
 
     class Meta:
         verbose_name = "Подписка"
         verbose_name_plural = "Подписки"
-        constraints = (
+        constraints = [
             models.UniqueConstraint(
-                fields=("subscribing_user", "target")
+                fields=("subscribing_user", "target"),
+                name="U_SUBSCRIPTIONS"
             )
-        )
-        ordering = ("author__username",)
+        ]
 
     def __str__(self):
         return f"{self.subscribing_user} -> {self.target}"

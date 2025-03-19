@@ -12,15 +12,20 @@ class Ingredient(models.Model):
         max_length=64,
         verbose_name="Единица измерения",
     )
+    created_at = models.DateTimeField(
+        auto_now_add=True,
+        verbose_name="Дата создания",
+    )
 
     class Meta:
         verbose_name = "Ингредиент"
         verbose_name_plural = "Ингредиенты"
         constraints = [
             models.UniqueConstraint(
-                fields=["name", "measurement_unit"]
+                fields=["name", "measurement_unit"], name="U_INGRIDIENT"
             )
         ]
+        ordering = ("-created_at",)
 
     def __str__(self):
         return f"{self.name} - {self.measurement_unit}"
@@ -30,6 +35,7 @@ class Recipe(models.Model):
     author = models.ForeignKey(
         get_user_model(),
         on_delete=models.CASCADE,
+        related_name="recipes",
         verbose_name="Автор",
     )
     ingredients = models.ManyToManyField(
@@ -72,7 +78,7 @@ class Ingredient_In_Recipe(models.Model):
     recipe = models.ForeignKey(
         Recipe,
         on_delete=models.CASCADE,
-        related_name="ingredients",
+        related_name="recipe_ingredients",
         verbose_name="Рецепт",
     )
     ingredient = models.ForeignKey(
@@ -93,13 +99,14 @@ class Ingredient_In_Recipe(models.Model):
         verbose_name_plural = "Ингредиенты в рецептах"
         constraints = [
             models.UniqueConstraint(
-                fields=("recipe", "ingredient")
+                fields=("recipe", "ingredient"),
+                name="U_INGREDIENTS_IN_RECIPE"
             )
         ]
 
     def __str__(self):
         return f"{self.recipe} - {self.ingredient}"
-    
+
 
 class Recipe_collection_mixin(models.Model):
     user = models.ForeignKey(
@@ -117,7 +124,8 @@ class Recipe_collection_mixin(models.Model):
         abstract = True
         constraints = [
             models.UniqueConstraint(
-                fields=("user", "recipe")
+                fields=("user", "recipe"),
+                name="U_RECIPE_COLLECTION"
             )
         ]
 
