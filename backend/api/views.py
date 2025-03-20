@@ -36,6 +36,7 @@ class Ingredient_Viewset(viewsets.ReadOnlyModelViewSet):
     filter_backends = (filters.SearchFilter,)
     search_fields = ("^name",)
     permission_classes = (permissions.AllowAny,)
+    pagination_class = None
 
 
 class Recipe_ViewSet(viewsets.ModelViewSet):

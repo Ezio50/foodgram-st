@@ -33,9 +33,22 @@ class Ingredient_Recipe_Serializer(serializers.ModelSerializer):
         fields = ("id", "name", "measurement_unit", "amount")
 
 
-class Author_Serializer(UserSerializer):
-    avatar = Base64ImageField()
+class Is_Subscribed_Mixin(serializers.Serializer):
     is_subscribed = serializers.SerializerMethodField()
+
+    def get_is_subscribed(self, obj):
+        user = self.context.get("request").user
+
+        if not user.is_authenticated:
+            return False
+
+        return user.subscriptions.filter(
+            target=obj.id
+        ).exists()
+
+
+class Author_Serializer(UserSerializer, Is_Subscribed_Mixin):
+    avatar = Base64ImageField()
 
     class Meta:
         model = get_user_model()
@@ -48,16 +61,6 @@ class Author_Serializer(UserSerializer):
             "avatar",
             "is_subscribed"
         )
-
-    def get_is_subscribed(self, obj):
-        user = self.context.get("request").user
-
-        if not user.is_authenticated:
-            return False
-
-        return user.subscriptions.filter(
-            target=obj.id
-        ).exists()
 
 
 class Create_Avatar_Serializer(serializers.ModelSerializer):
@@ -75,6 +78,13 @@ class Create_Avatar_Serializer(serializers.ModelSerializer):
 
         return super().validate(attrs)
 
+    def validate_avatar(self, value):
+        if not value:
+            raise serializers.ValidationError(
+                {"avatar": "Обязательное поле"}
+            )
+        
+        return value
 
 class Short_Recipe_Serializer(serializers.ModelSerializer):
     image = Base64ImageField()
@@ -165,7 +175,7 @@ class Recipe_Serializer(Short_Recipe_Serializer):
         return super().update(instance, validated_data)
 
 
-class Subscriber_Serializer(Author_Serializer):
+class Subscriber_Serializer(Author_Serializer, Is_Subscribed_Mixin):
     recipes = serializers.SerializerMethodField(method_name="get_recipes")
     recipes_count = serializers.IntegerField(source="recipes.count")
 
@@ -173,7 +183,7 @@ class Subscriber_Serializer(Author_Serializer):
         model = get_user_model()
         fields = (
             "id", "email", "username", "first_name", "last_name",
-            "recipes", "recipes_count", "avatar"
+            "recipes", "recipes_count", "avatar", "is_subscribed"
         )
 
     def get_recipes(self, obj):
@@ -316,6 +326,14 @@ class Create_Recipe_Serializer(serializers.ModelSerializer):
             raise serializers.ValidationError()
 
         return data
+    
+    def validate_image(self, value):
+        if not value:
+            raise serializers.ValidationError(
+                {"image": "Обязательное поле"}
+            )
+        
+        return value
 
     def create(self, validated_data):
         ingredients = validated_data.pop("ingredients")
