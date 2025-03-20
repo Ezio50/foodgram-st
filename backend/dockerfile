@@ -1,0 +1,17 @@
+FROM python:3.12.4
+COPY . .
+
+RUN pip install --upgrade pip
+RUN pip install -r requirements.txt
+
+EXPOSE 8000
+
+ENV PYTHONDONTWRITEBYTECODE 1
+ENV PYTHONUNBUFFERED 1
+
+CMD ["bash", "-c", "python manage.py collectstatic --noinput && \
+python manage.py makemigrations && \
+python manage.py migrate && \
+python manage.py loaddata ./example/example_users.json && \
+python manage.py loaddata ./example/example_recipe.json && \
+gunicorn foodgram.wsgi:application --bind 0:8000"]
