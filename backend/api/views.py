@@ -1,6 +1,6 @@
-from io import StringIO
+from io import BytesIO
 from django.contrib.auth import get_user_model
-from django.db.models import Sum, F
+from django.db.models import Sum
 from django.http import FileResponse
 from django.shortcuts import get_object_or_404
 from django_filters import rest_framework
@@ -126,21 +126,28 @@ class Recipe_ViewSet(viewsets.ModelViewSet):
     def download_shopping_cart(self, request):
         ingredients = User_Cart.objects.filter(
             user=request.user
+        ).values(
+            "recipe__recipe_ingredients__ingredient__name",
+            "recipe__recipe_ingredients__ingredient__measurement_unit"
         ).annotate(
-            name=F("recipe__recipe_ingredients__ingredient__name"),
-            unit=F("recipe__recipe_ingredients__ingredient__measurement_unit"),
-            sum=Sum("recipe__recipe_ingredients__amount")
+            total=Sum('recipe__recipe_ingredients__amount')
         )
 
         return self.ingredients_to_txt(ingredients)
 
     def ingredients_to_txt(self, ingredients):
-        shopping_list = "\n".join(
-            f"{i.name} - {i.sum}({i.unit})"
-            for i in ingredients
-        )
-        file = StringIO()
-        file.write(shopping_list)
+        shopping_list = []
+        for i in ingredients:
+            name = i["recipe__recipe_ingredients__ingredient__name"]
+            unit = i[
+                "recipe__recipe_ingredients__ingredient__measurement_unit"
+            ]
+            total = i["total"]
+            shopping_list.append(f"{name} - {total}({unit})")
+        shopping_list_str = "\n".join(shopping_list)
+        file = BytesIO()
+        file.write(shopping_list_str.encode())
+        file.seek(0)
 
         return FileResponse(
             file,

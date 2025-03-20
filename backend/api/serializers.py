@@ -212,14 +212,6 @@ class Create_User(UserCreateSerializer):
         )
 
 
-class Avatar_Serializer(serializers.ModelSerializer):
-    avatar = Base64ImageField()
-
-    class Meta:
-        model = get_user_model()
-        fields = ("avatar",)
-
-
 class Recipe_Collection_Serializer(serializers.ModelSerializer):
 
     class Meta:

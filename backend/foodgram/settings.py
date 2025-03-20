@@ -164,15 +164,19 @@ REST_FRAMEWORK = {
     'DEFAULT_PAGINATION_CLASS': 'api.pagination.Standard_Pagination',
 }
 
+AUTHENTICATION_BACKENDS = [
+    'auth_user.auth_backends.Email_Backend'
+]
+
 DJOSER = {
-    "LOGIN_FIELD": "email",
-    "SERIALIZERS": {
-        "user": "api.serializers.Author_Serializer",
-        "user_create": "api.serializers.Create_User",
-        "current_user": "api.serializers.Author_Serializer",
+    'LOGIN_FIELD': 'email',
+    'SERIALIZERS': {
+        'user': 'api.serializers.Author_Serializer',
+        'user_create': 'api.serializers.Create_User',
+        'current_user': 'api.serializers.Author_Serializer',
     },
-    "PERMISSIONS": {
-        "user": ["djoser.permissions.CurrentUserOrAdminOrReadOnly"],
-        "user_list": ["rest_framework.permissions.AllowAny"],
+    'PERMISSIONS': {
+        'user': ['djoser.permissions.CurrentUserOrAdminOrReadOnly'],
+        'user_list': ['rest_framework.permissions.AllowAny'],
     },
 }
