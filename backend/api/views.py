@@ -1,55 +1,55 @@
 from io import BytesIO
+
 from django.contrib.auth import get_user_model
 from django.db.models import Sum
 from django.http import FileResponse
 from django.shortcuts import get_object_or_404
 from django_filters import rest_framework
+from djoser import views
 from rest_framework import (
-    viewsets,
     decorators,
+    filters,
     permissions,
-    status,
     response,
-    filters
+    status,
+    viewsets
 )
+
+from api.filters import RecipeFilter
+from api.permissions import OwnershipPermission, UserSelfPermission
 from api.serializers import (
-    Ingredient_Serializer,
-    Recipe_Serializer,
-    Favorite_Serializer,
-    Cart_Serializer,
-    Author_Serializer,
-    Create_User,
-    Subscriber_Serializer,
-    Subscription_Serializer,
-    Create_Avatar_Serializer,
-    Change_Password_Serializer,
-    Create_Recipe_Serializer
+    CartSerializer,
+    CreateAvatarSerializer,
+    CreateRecipeSerializer,
+    FavoriteSerializer,
+    IngredientSerializer,
+    RecipeSerializer,
+    SubscriberSerializer,
+    SubscriptionSerializer
 )
-from api.permissions import Ownership_Permission, Auth_RO_Staff
-from api.filters import Recipe_Filter
-from recipe.models import Ingredient, Recipe, User_Cart
+from recipe.models import Ingredient, Recipe, UserCart
 
 
-class Ingredient_Viewset(viewsets.ReadOnlyModelViewSet):
+class IngredientViewset(viewsets.ReadOnlyModelViewSet):
     queryset = Ingredient.objects.all()
-    serializer_class = Ingredient_Serializer
+    serializer_class = IngredientSerializer
     filter_backends = (filters.SearchFilter,)
     search_fields = ("^name",)
     permission_classes = (permissions.AllowAny,)
     pagination_class = None
 
 
-class Recipe_ViewSet(viewsets.ModelViewSet):
+class RecipeViewSet(viewsets.ModelViewSet):
     queryset = Recipe.objects.all()
-    permission_classes = (Ownership_Permission,)
+    permission_classes = (OwnershipPermission,)
     filter_backends = (rest_framework.DjangoFilterBackend,)
-    filterset_class = Recipe_Filter
+    filterset_class = RecipeFilter
 
     def get_serializer_class(self):
         if self.action in ("create", "partial_update"):
-            return Create_Recipe_Serializer
+            return CreateRecipeSerializer
 
-        return Recipe_Serializer
+        return RecipeSerializer
 
     @decorators.action(
         detail=True,
@@ -66,10 +66,10 @@ class Recipe_ViewSet(viewsets.ModelViewSet):
 
         if request.method == "POST":
             return self.create_recipe_collection(
-                request, pk, Favorite_Serializer
+                request, pk, FavoriteSerializer
             )
         return self.delete_recipe_collection(
-            request, pk, Favorite_Serializer.Meta.model.objects
+            request, pk, FavoriteSerializer.Meta.model.objects
         )
 
     @decorators.action(
@@ -87,10 +87,10 @@ class Recipe_ViewSet(viewsets.ModelViewSet):
 
         if request.method == "POST":
             return self.create_recipe_collection(
-                request, pk, Cart_Serializer
+                request, pk, CartSerializer
             )
         return self.delete_recipe_collection(
-            request, pk, Cart_Serializer.Meta.model.objects
+            request, pk, CartSerializer.Meta.model.objects
         )
 
     def create_recipe_collection(self, request, pk, serializer_class):
@@ -114,8 +114,7 @@ class Recipe_ViewSet(viewsets.ModelViewSet):
         if recipe.exists():
             recipe.delete()
             return response.Response(status=status.HTTP_204_NO_CONTENT)
-        else:
-            return response.Response(status=status.HTTP_400_BAD_REQUEST)
+        return response.Response(status=status.HTTP_400_BAD_REQUEST)
 
     @decorators.action(
         detail=False,
@@ -125,25 +124,27 @@ class Recipe_ViewSet(viewsets.ModelViewSet):
         permission_classes=(permissions.IsAuthenticated,)
     )
     def download_shopping_cart(self, request):
-        ingredients = User_Cart.objects.filter(
+        ingredients = UserCart.objects.filter(
             user=request.user
         ).values(
-            "recipe__recipe_ingredients__ingredient__name",
-            "recipe__recipe_ingredients__ingredient__measurement_unit"
+            "recipe__ingredients_in_recipe__ingredient__name",
+            "recipe__ingredients_in_recipe__ingredient__measurement_unit"
         ).annotate(
-            total=Sum('recipe__recipe_ingredients__amount')
+            total=Sum('recipe__ingredients_in_recipe__amount')
         )
 
         return self.ingredients_to_txt(ingredients)
 
     def ingredients_to_txt(self, ingredients):
         shopping_list = []
-        for i in ingredients:
-            name = i["recipe__recipe_ingredients__ingredient__name"]
-            unit = i[
-                "recipe__recipe_ingredients__ingredient__measurement_unit"
+        for ingredient in ingredients:
+            name = ingredient[
+                "recipe__ingredients_in_recipe__ingredient__name"
             ]
-            total = i["total"]
+            unit = ingredient[
+                "recipe__ingredients_in_recipe__ingredient__measurement_unit"
+            ]
+            total = ingredient["total"]
             shopping_list.append(f"{name} - {total}({unit})")
         shopping_list_str = "\n".join(shopping_list)
         file = BytesIO()
@@ -174,29 +175,9 @@ class Recipe_ViewSet(viewsets.ModelViewSet):
         )
 
 
-class User_ViewSet(viewsets.ModelViewSet):
+class UserViewSet(views.UserViewSet):
     queryset = get_user_model().objects.all()
-    serializer_class = Create_User
-    permission_classes = (Auth_RO_Staff,)
-
-    def get_serializer_class(self):
-        if self.action in ("create", "partial_update"):
-            return Create_User
-
-        return Author_Serializer
-
-    @decorators.action(
-        detail=False,
-        methods=("get",),
-        url_path="me",
-        url_name="me",
-        permission_classes=(permissions.IsAuthenticated,)
-    )
-    def me(self, request):
-        serializer = Author_Serializer(
-            request.user, context={"request": request}
-        )
-        return response.Response(serializer.data)
+    permission_classes = (UserSelfPermission,)
 
     @decorators.action(
         detail=True,
@@ -205,16 +186,15 @@ class User_ViewSet(viewsets.ModelViewSet):
         url_name="avatar",
         permission_classes=(permissions.IsAuthenticated,)
     )
-    def avatar(self, request, pk):
+    def avatar(self, request, id):
         if request.method == "PUT":
             return self.create_avatar(request)
         return self.delete_avatar(request)
 
     def create_avatar(self, request):
-        serializer = Create_Avatar_Serializer(
+        serializer = CreateAvatarSerializer(
             request.user,
             data=request.data,
-            partial=True,
             context={"request": request}
         )
         serializer.is_valid(raise_exception=True)
@@ -235,27 +215,6 @@ class User_ViewSet(viewsets.ModelViewSet):
 
     @decorators.action(
         detail=False,
-        methods=("post",),
-        url_path="set_password",
-        url_name="set_password",
-        permission_classes=(permissions.IsAuthenticated,)
-    )
-    def set_password(self, request):
-        serializer = Change_Password_Serializer(
-            data=request.data,
-            context={"request": request}
-        )
-        if serializer.is_valid(raise_exception=True):
-            new_password = serializer.data["new_password"]
-            request.user.set_password(new_password)
-            request.user.save()
-
-            return response.Response(status=status.HTTP_204_NO_CONTENT)
-
-        return response.Response(status=status.HTTP_401_UNAUTHORIZED)
-
-    @decorators.action(
-        detail=False,
         methods=("get",),
         url_path="subscriptions",
         url_name="subscriptions",
@@ -267,7 +226,7 @@ class User_ViewSet(viewsets.ModelViewSet):
             pk__in=targets
         )
         pages = self.paginate_queryset(queryset)
-        serializer = Subscriber_Serializer(
+        serializer = SubscriberSerializer(
             pages, many=True, context={"request": request}
         )
 
@@ -280,19 +239,19 @@ class User_ViewSet(viewsets.ModelViewSet):
         url_name="subscribe",
         permission_classes=(permissions.IsAuthenticated,)
     )
-    def subscribe(self, request, pk):
+    def subscribe(self, request, id):
         get_object_or_404(
             get_user_model(),
-            pk=pk
+            pk=id
         )
         if request.method == "POST":
-            return self.create_subscription(request, pk)
-        return self.delete_subscription(request, pk)
+            return self.create_subscription(request, id)
+        return self.delete_subscription(request, id)
 
     def create_subscription(self, request, pk):
         if request.user.pk == int(pk):
             return response.Response(status=status.HTTP_400_BAD_REQUEST)
-        serializer = Subscription_Serializer(
+        serializer = SubscriptionSerializer(
             data={
                 "subscribing_user": request.user.pk,
                 "target": pk,
@@ -301,7 +260,7 @@ class User_ViewSet(viewsets.ModelViewSet):
         )
         serializer.is_valid(raise_exception=True)
         serializer.save()
-        response_serializer = Subscriber_Serializer(
+        response_serializer = SubscriberSerializer(
             self.get_queryset().get(pk=pk),
             context={"request": request}
         )
@@ -312,12 +271,11 @@ class User_ViewSet(viewsets.ModelViewSet):
         )
 
     def delete_subscription(self, request, pk):
-        queryset = Subscription_Serializer.Meta.model.objects
+        queryset = SubscriptionSerializer.Meta.model.objects
         subscription = queryset.filter(
             subscribing_user=request.user, target_id=pk
         )
         if subscription.exists():
             subscription.delete()
             return response.Response(status=status.HTTP_204_NO_CONTENT)
-        else:
-            return response.Response(status=status.HTTP_400_BAD_REQUEST)
+        return response.Response(status=status.HTTP_400_BAD_REQUEST)

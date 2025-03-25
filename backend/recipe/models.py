@@ -1,20 +1,17 @@
 from django.contrib.auth import get_user_model
 from django.core.validators import MinValueValidator
 from django.db import models
+from foodgram import constants
 
 
 class Ingredient(models.Model):
     name = models.CharField(
-        max_length=128,
+        max_length=constants.INGREDIENT_NAME_LENGTH,
         verbose_name="Название",
     )
     measurement_unit = models.CharField(
-        max_length=64,
+        max_length=constants.MEASUREMENT_UNIT_LENGTH,
         verbose_name="Единица измерения",
-    )
-    created_at = models.DateTimeField(
-        auto_now_add=True,
-        verbose_name="Дата создания",
     )
 
     class Meta:
@@ -25,7 +22,7 @@ class Ingredient(models.Model):
                 fields=["name", "measurement_unit"], name="U_INGRIDIENT"
             )
         ]
-        ordering = ("-created_at",)
+        ordering = ("name",)
 
     def __str__(self):
         return f"{self.name} - {self.measurement_unit}"
@@ -40,11 +37,11 @@ class Recipe(models.Model):
     )
     ingredients = models.ManyToManyField(
         Ingredient,
-        through="Ingredient_In_Recipe",
+        through="IngredientInRecipe",
         verbose_name="Ингредиенты",
     )
     name = models.CharField(
-        max_length=256,
+        max_length=constants.RECIPE_NAME_LENGTH,
         verbose_name="Название рецепта"
     )
     image = models.ImageField(
@@ -54,10 +51,10 @@ class Recipe(models.Model):
     text = models.TextField(
         verbose_name="Описание"
     )
-    cooking_time = models.IntegerField(
+    cooking_time = models.PositiveIntegerField(
         "Время приготовления (в минутах)",
         validators=[
-            MinValueValidator(1),
+            MinValueValidator(constants.MIN_COOKING_TIME),
         ],
     )
     created_at = models.DateTimeField(
@@ -74,24 +71,27 @@ class Recipe(models.Model):
         return self.name
 
 
-class Ingredient_In_Recipe(models.Model):
+class IngredientInRecipe(models.Model):
     recipe = models.ForeignKey(
         Recipe,
         on_delete=models.CASCADE,
-        related_name="recipe_ingredients",
+        related_name="ingredients_in_recipe",
         verbose_name="Рецепт",
     )
     ingredient = models.ForeignKey(
         Ingredient,
         on_delete=models.CASCADE,
-        related_name="recipies",
         verbose_name="Ингредиент",
     )
     amount = models.IntegerField(
         verbose_name="Количество",
         validators=(
-            MinValueValidator(1),
+            MinValueValidator(constants.MIN_INGREDIENT_AMOUNT),
         ),
+    )
+    created_at = models.DateTimeField(
+        auto_now_add=True,
+        verbose_name="Дата создания",
     )
 
     class Meta:
@@ -103,12 +103,13 @@ class Ingredient_In_Recipe(models.Model):
                 name="U_INGREDIENTS_IN_RECIPE"
             )
         ]
+        ordering = ("-created_at",)
 
     def __str__(self):
         return f"{self.recipe} - {self.ingredient}"
 
 
-class Recipe_collection_mixin(models.Model):
+class RecipeCollectionMixin(models.Model):
     user = models.ForeignKey(
         get_user_model(),
         on_delete=models.CASCADE,
@@ -119,6 +120,10 @@ class Recipe_collection_mixin(models.Model):
         on_delete=models.CASCADE,
         verbose_name="Рецепт",
     )
+    created_at = models.DateTimeField(
+        auto_now_add=True,
+        verbose_name="Дата создания",
+    )
 
     class Meta:
         abstract = True
@@ -128,12 +133,13 @@ class Recipe_collection_mixin(models.Model):
                 name="U_RECIPE_COLLECTION"
             )
         ]
+        ordering = ("-created_at",)
 
     def __str__(self):
         return f"{self.user} - {self.recipe}"
 
 
-class User_Favorite(Recipe_collection_mixin):
+class UserFavorite(RecipeCollectionMixin):
 
     class Meta:
         abstract = False
@@ -142,7 +148,7 @@ class User_Favorite(Recipe_collection_mixin):
         default_related_name = "favorites"
 
 
-class User_Cart(Recipe_collection_mixin):
+class UserCart(RecipeCollectionMixin):
 
     class Meta:
         abstract = False

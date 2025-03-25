@@ -2,10 +2,10 @@
 from django.contrib import admin
 from recipe.models import (
     Ingredient,
-    Ingredient_In_Recipe,
+    IngredientInRecipe,
     Recipe,
-    User_Favorite,
-    User_Cart
+    UserFavorite,
+    UserCart
 )
 
 
@@ -16,7 +16,7 @@ class Ingredient_Admin(admin.ModelAdmin):
 
 
 class Ingredient_In_Recipe_Inline(admin.TabularInline):
-    model = Ingredient_In_Recipe
+    model = IngredientInRecipe
     min_num = 1
 
 
@@ -31,16 +31,16 @@ class Recipe_Admin(admin.ModelAdmin):
         return obj.favorites.count()
 
 
-@admin.register(Ingredient_In_Recipe)
-class Ingredient_In_Recipe(admin.ModelAdmin):
+@admin.register(IngredientInRecipe)
+class IngredientInRecipe(admin.ModelAdmin):
     list_display = ("pk", "recipe", "ingredient", "amount")
 
 
-@admin.register(User_Cart)
+@admin.register(UserCart)
 class Shopping_Cart_Admin(admin.ModelAdmin):
     list_display = ("pk", "user", "recipe")
 
 
-@admin.register(User_Favorite)
+@admin.register(UserFavorite)
 class Favorite_Admin(admin.ModelAdmin):
     list_display = ("pk", "user", "recipe")
