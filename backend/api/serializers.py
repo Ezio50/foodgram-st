@@ -72,6 +72,7 @@ class CreateAvatarSerializer(serializers.ModelSerializer):
         model = User
         fields = ("avatar",)
 
+
 class ShortRecipeSerializer(serializers.ModelSerializer):
     class Meta:
         model = Recipe
@@ -256,7 +257,9 @@ class CreateRecipeSerializer(serializers.ModelSerializer):
         ingredients = data.get("ingredients")
 
         if not ingredients:
-            raise serializers.ValidationError()
+            raise serializers.ValidationError(
+                {"ingredients": "Обязательное поле"}
+            )
 
         ingredients_ids = [
             ingredient["id"]

@@ -8,7 +8,7 @@ class UserSelfPermission(permissions.BasePermission):
         if view.action == 'me':
             return request.user.is_authenticated
         return True
-    
+
     def has_object_permission(self, request, view, obj):
         return (
             request.method in permissions.SAFE_METHODS

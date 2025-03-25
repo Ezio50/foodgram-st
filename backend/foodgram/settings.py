@@ -74,23 +74,15 @@ WSGI_APPLICATION = 'foodgram.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/5.1/ref/settings/#databases
 DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': 'mydatabase', # This is where you put the name of the db file. 
-                 # If one doesn't exist, it will be created at migration time.
+    "default": {
+        "ENGINE": 'django.db.backends.postgresql',
+        "NAME": os.getenv("NAME"),
+        "USER": os.getenv("USER"),
+        "PASSWORD": os.getenv("PASSWORD"),
+        "HOST": os.getenv("HOST"),
+        "PORT": os.getenv("PORT"),
     }
 }
-
-# DATABASES = {
-#     "default": {
-#         "ENGINE": 'django.db.backends.postgresql',
-#         "NAME": os.getenv("NAME"),
-#         "USER": os.getenv("USER"),
-#         "PASSWORD": os.getenv("PASSWORD"),
-#         "HOST": os.getenv("HOST"),
-#         "PORT": os.getenv("PORT"),
-#     }
-# }
 
 AUTH_USER_MODEL = "auth_user.User"
 
