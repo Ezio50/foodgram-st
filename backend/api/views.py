@@ -16,7 +16,7 @@ from rest_framework import (
 )
 
 from api.filters import RecipeFilter
-from api.permissions import OwnershipPermission, UserSelfPermission
+from api.permissions import OwnershipPermission
 from api.serializers import (
     CartSerializer,
     CreateAvatarSerializer,
@@ -177,7 +177,7 @@ class RecipeViewSet(viewsets.ModelViewSet):
 
 class UserViewSet(views.UserViewSet):
     queryset = get_user_model().objects.all()
-    permission_classes = (UserSelfPermission,)
+    permission_classes = (OwnershipPermission,)
 
     @decorators.action(
         detail=True,

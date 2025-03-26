@@ -127,11 +127,8 @@ class RecipeCollectionMixin(models.Model):
 
     class Meta:
         abstract = True
-        constraints = [
-            models.UniqueConstraint(
-                fields=("user", "recipe"),
-                name="U_RECIPE_COLLECTION"
-            )
+        unique_together = [
+            ["user", "recipe"]
         ]
         ordering = ("-created_at",)
 
@@ -141,8 +138,7 @@ class RecipeCollectionMixin(models.Model):
 
 class UserFavorite(RecipeCollectionMixin):
 
-    class Meta:
-        abstract = False
+    class Meta(RecipeCollectionMixin.Meta):
         verbose_name = "Избранное"
         verbose_name_plural = "Избранное"
         default_related_name = "favorites"
@@ -150,8 +146,7 @@ class UserFavorite(RecipeCollectionMixin):
 
 class UserCart(RecipeCollectionMixin):
 
-    class Meta:
-        abstract = False
+    class Meta(RecipeCollectionMixin.Meta):
         verbose_name = "Список покупок"
         verbose_name_plural = "Списки покупок"
-        default_related_name = "in_cart"
+        default_related_name = "carts"

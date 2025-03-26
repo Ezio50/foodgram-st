@@ -119,7 +119,7 @@ class RecipeSerializer(serializers.ModelSerializer):
         user = request.user
 
         return (user.is_authenticated
-                and request.user.in_cart.filter(recipe=obj).exists())
+                and request.user.carts.filter(recipe=obj).exists())
 
 
 class SubscriberSerializer(AuthorSerializer, IsSubscribedMixin):
@@ -137,16 +137,11 @@ class SubscriberSerializer(AuthorSerializer, IsSubscribedMixin):
         queryset = obj.recipes.all()
         request = self.context.get("request")
         recipes_limit = request.query_params.get("recipes_limit")
-        if recipes_limit is not None:
-            try:
-                recipes = queryset[:int(recipes_limit)]
-            except ValueError:
-                recipes = queryset
-        else:
-            recipes = queryset
+        if recipes_limit and recipes_limit.isdigit():
+            queryset = queryset[:int(recipes_limit)]
 
         return ShortRecipeSerializer(
-            recipes, context={"request": request}, many=True
+            queryset, context={"request": request}, many=True
         ).data
 
 

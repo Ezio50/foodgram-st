@@ -3,6 +3,7 @@ from json import loads
 from django.conf import settings
 from django.core.management.base import BaseCommand
 
+from foodgram import constants
 from recipe.models import Ingredient
 
 
@@ -11,7 +12,7 @@ class Command(BaseCommand):
 
     def handle(self, *args, **kwargs):
         try:
-            filename = settings.BASE_DIR / "ingredients.json"
+            filename = settings.BASE_DIR / constants.INGREDIENT_FILE
             with open(filename, "r", encoding="utf-8") as file:
                 ingredient_list = loads(file.read())
 
