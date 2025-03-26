@@ -46,11 +46,11 @@ docker compose up
     ```
     3. Собрать статику
     ```
-    docker compose exec backend python manage.py collectstatic
+    docker compose exec backend python manage.py collectstatic --noinput
     ```
     4. Создать миграции
     ```
-    docker compose exec backend python manage.py makemigratons
+    docker compose exec backend python manage.py makemigrations
     ```
     5. Выполнить миграции
     ```
