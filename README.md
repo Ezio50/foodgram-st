@@ -20,23 +20,46 @@
 NAME=foodgram
 USER=foodgram_u
 PASSWORD=1eHPdAi918Lf7X6b
-HOST=postgres
+HOST=localhost
 PORT=5432
 DEBUG=True
+SECRET_KEY="django-insecure-@q*c2bpx_qnq4f$fhi40x0(^mqo@$ao#fq4cgi5q6^7_nxuu4^"
 ALLOWED_HOSTS="127.0.0.1 localhost"
 CSRF_TRUSTED_ORIGINS="http://127.0.0.1 http://localhost"
 ```
 
-2. Перейдите в директорию [/infra](/infra/) и запустите docker-compose проект. Сбор статики, миграции и наполнение бд тестовыми ингредиентами происходит **автоматически**. 
+2. Перейдите в директорию [/infra](/infra/) и запустите docker-compose проект. Сбор статики, миграции и наполнение бд тестовыми ингредиентами происходит **автоматически**. За автоматизацию отвечает command инструкция в файле [docker-compose.yml](infra/docker-compose.yml) (строка 20).
 ```
 cd infra
 docker compose up
 ```
 
-3. Также, ингредиенты можно загрузить вручную следующей командой:
-```
-docker compose exec backend python manage.py parse_ingredients
-```
+3. Также, подготовку системы к работе можно провести вручную:
+    1. Изменить [docker-compose.yml](infra/docker-compose.yml) файл (строка 20), чтобы убрать автоматизацию.
+    ```
+    + command: gunicorn foodgram.wsgi:application --bind 0:8000
+    ```
+    2. Запустить контейнеры
+    ```
+    cd infra
+    docker compose up
+    ```
+    3. Собрать статику
+    ```
+    docker compose exec backend python manage.py collectstatic
+    ```
+    4. Создать миграции
+    ```
+    docker compose exec backend python manage.py makemigratons
+    ```
+    5. Выполнить миграции
+    ```
+    docker compose exec backend python manage.py migrate
+    ```
+    6. Импортировать ингредиенты
+    ```
+    docker compose exec backend python manage.py parse_ingredients
+    ```
 
 # Примеры запросов
 

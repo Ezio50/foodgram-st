@@ -17,6 +17,11 @@ services:
     volumes:
       - static_volume:/static/
       - media_volume:/media/
+    command: bash -c "python manage.py collectstatic --noinput && \
+             python manage.py makemigrations && \
+             python manage.py migrate && \
+             python manage.py parse_ingredients && \
+             gunicorn foodgram.wsgi:application --bind 0:8000"
 
   frontend:
     container_name: foodgram-front
