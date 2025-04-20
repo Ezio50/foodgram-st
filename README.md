@@ -4,6 +4,12 @@
 
 # Как запустить
 
+1. Клонируйте репозиторий:
+
+```
+git clone https://github.com/Ezio50/foodgram-st.git 
+cd foodgram-st
+```
 1. Создать и заполнить /backend/foodgram/.env файл с данными подключения к бд.
 Например, .env файл может выглядеть так
 ```
@@ -23,4 +29,4 @@ CSRF_TRUSTED_ORIGINS="http://127.0.0.1 http://localhost"
 cd infra
 docker compose up
 ```
-3. Зайти на: **http://localhost**
+3. Откройте сайт в браузере: **http://localhost**
