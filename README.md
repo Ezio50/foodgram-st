@@ -14,12 +14,12 @@ cd foodgram-st
 Например, .env файл может выглядеть так
 ```
 NAME=foodgram
-USER=foodgram_user
-PASSWORD=password
+USER=foodgram_u
+PASSWORD=1eHPdAi918Lf7X6b
 HOST=postgres
 PORT=5432
 DEBUG=True
-SECRET_KEY="your_secret_key"
+SECRET_KEY="django-insecure-@q*c2bpx_qnq4f$fhi40x0(^mqo@$ao#fq4cgi5q6^7_nxuu4^"
 ALLOWED_HOSTS="127.0.0.1 localhost"
 CSRF_TRUSTED_ORIGINS="http://127.0.0.1 http://localhost"
 ```
