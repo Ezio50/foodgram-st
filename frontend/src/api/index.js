@@ -303,14 +303,16 @@ class Api {
 
   // ingredients
   getIngredients({ name }) {
-    const token = localStorage.getItem("token");
-    return fetch(`/api/ingredients/?name=${name}`, {
-      method: "GET",
-      headers: {
-        ...this._headers,
-      },
-    }).then(this.checkResponse);
-  }
+  const token = localStorage.getItem("token");
+  return fetch(`/api/ingredients/?name=${name}`, {
+    method: "GET",
+    headers: {
+      ...this._headers,
+    },
+  })
+    .then(this.checkResponse)
+    .then((data) => data.results);
+}
 
 
   addToOrders({ id }) {
@@ -358,6 +360,6 @@ class Api {
   }
 }
 
-export default new Api(process.env.API_URL || "http://localhost", {
+export default new Api("http://backend", {
   "content-type": "application/json",
 });
