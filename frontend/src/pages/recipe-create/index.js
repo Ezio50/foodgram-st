@@ -67,17 +67,18 @@ const RecipeCreate = ({ onEdit }) => {
     });
   };
 
-  useEffect(
-    (_) => {
-      if (ingredientValue.name === "") {
-        return setIngredients([]);
-      }
-      api.getIngredients({ name: ingredientValue.name }).then((ingredients) => {
-        setIngredients(ingredients);
-      });
-    },
-    [ingredientValue.name]
-  );
+useEffect(
+  (_) => {
+    if (ingredientValue.name === "") {
+      return setIngredients([]);
+    }
+    api.getIngredients({ name: ingredientValue.name }).then((ingredients) => {
+      console.log("Ingredients from API:", ingredients); // Добавь эту строку
+      setIngredients(ingredients);
+    });
+  },
+  [ingredientValue.name]
+);
 
   const handleIngredientAutofill = ({ id, name, measurement_unit }) => {
     setIngredientValue({
@@ -228,7 +229,7 @@ const RecipeCreate = ({ onEdit }) => {
                   </div>
                 )}
               </div>
-              {showIngredients && ingredients.length > 0 && (
+              {/*showIngredients && ingredients.length > 0 && */(
                 <IngredientsSearch
                   ingredients={ingredients}
                   onClick={({ id, name, measurement_unit }) => {
